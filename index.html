@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SkyParrot Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bauhaus+93&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: #1B1B1B;
+            font-family: 'Press Start 2P', cursive;
+            overflow-x: hidden;
+        }
+        
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-bottom: 100px; /* Extra space for scrolling */
+        }
+        
+        .game-title-bar {
+            width: 100%;
+            max-width: 400px;
+            background-color: black;
+            color: white;
+            text-align: center;
+            padding: 6px 0;
+            font-family: 'Bauhaus 93', cursive;
+            font-size: 22px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            margin: 0 auto;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-color: skyblue;
+            touch-action: none;
+        }
+        
+        .game-over-screen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Press Start 2P', sans-serif;
+            width: 80%;
+            max-width: 300px;
+            z-index: 10;
+        }
+        
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', sans-serif;
+            background-color: #FF5252;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        
+        button:active {
+            background-color: #D32F2F;
+        }
+        
+        .menu-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 20;
+            background: rgba(0,0,0,0.5);
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+        }
+        
+        .share-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 20;
+            background: rgba(0,0,0,0.5);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+        }
+        
+        .share-icon {
+            color: white;
+            font-size: 20px;
+            display: block;
+        }
+        
+        .share-text {
+            display: none;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .share-btn:not(:has(.share-icon)) .share-text {
+            display: block;
+        }
+        
+        .menu-line {
+            width: 70%;
+            height: 3px;
+            background: white;
+            margin: 3px 0;
+            border-radius: 2px;
+        }
+        
+        .menu-content {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            border-radius: 5px;
+            padding: 10px;
+            display: none;
+            flex-direction: column;
+            z-index: 20;
+            width: 180px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .menu-content a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 5px;
+            font-size: 12px;
+            border-bottom: 1px solid #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .menu-content a:last-child {
+            border-bottom: none;
+        }
+        
+        .menu-content a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px 0;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .modal-content {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: #2D2D2D;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            color: #E0E0E0;
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+        }
+        
+        .modal-content h1 {
+            color: #FF5252;
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .modal-content h2 {
+            color: #4CAF50;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 18px;
+            margin-top: 30px;
+            border-bottom: 2px solid #3E3E3E;
+            padding-bottom: 5px;
+        }
+        
+        .modal-content p {
+            margin-bottom: 20px;
+        }
+        
+        .modal-content ul {
+            padding-left: 20px;
+        }
+        
+        .modal-content li {
+            margin-bottom: 10px;
+        }
+        
+        .modal-content a {
+            color: #4FC3F7;
+            text-decoration: none;
+        }
+        
+        .modal-content a:hover {
+            text-decoration: underline;
+        }
+        
+        .modal-close-btn {
+            display: block;
+            width: 200px;
+            margin: 30px auto 0;
+            padding: 12px;
+            background-color: #FF5252;
+            color: white;
+            text-align: center;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #aboutModal .modal-content {
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #FF5252;
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+        }
+        
+        #aboutModal h1 {
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+        
+        #aboutModal p {
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        #aboutModal .contact {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+        
+        #aboutModal .contact a {
+            word-break: break-all;
+            font-size: 12px;
+            display: inline-block;
+            max-width: 100%;
+            overflow-wrap: break-word;
+        }
+        
+        #aboutModal .copyright {
+            margin-top: 30px;
+            font-size: 10px;
+            color: #888;
+        }
+        
+        #privacyModal .modal-content {
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #FF5252;
+            /* CHANGED: Privacy Policy font to Arial */
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .game-instructions {
+            color: white;
+            text-align: center;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            margin: 20px 0;
+            max-width: 400px;
+            padding: 0 20px;
+            line-height: 1.4;
+        }
+        
+        .extra-space {
+            height: 300px; /* Extra space to enable scrolling */
+            width: 100%;
+        }
+        
+        @media (max-width: 500px) {
+            .game-title-bar {
+                font-size: 20px;
+                padding: 5px 0;
+            }
+            
+            #gameContainer {
+                height: 500px;
+            }
+            
+            .menu-content {
+                width: 160px;
+            }
+            
+            .menu-content a {
+                font-size: 10px;
+                padding: 6px 5px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .parrot {
+                width: 25px;
+                height: 20px;
+            }
+            
+            .pipe-width {
+                width: 40px;
+            }
+            
+            .pipe-gap {
+                height: 180px; /* Slightly larger gap on mobile */
+            }
+            
+            #aboutModal .modal-content {
+                padding: 15px;
+            }
+            
+            #aboutModal h1 {
+                font-size: 18px;
+            }
+            
+            #aboutModal p {
+                font-size: 12px;
+            }
+            
+            /* CHANGED: Email overflow fix for mobile */
+            #aboutModal .contact a {
+                font-size: 10px;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                display: inline-block;
+                max-width: 100%;
+            }
+
+            .game-instructions {
+                font-size: 10px;
+                padding: 0 10px;
+            }
+            
+            .extra-space {
+                height: 200px;
+            }
+        }
+        
+        @media (max-height: 700px) {
+            #gameContainer {
+                height: 400px;
+            }
+            
+            .menu-content {
+                max-height: 60vh;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="game-title-bar">SkyParrot</div>
+        
+        <div id="gameContainer">
+            <div class="menu-btn" id="menuBtn">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </div>
+            
+            <div class="share-btn" id="shareBtn" title="Share">
+                <i class="fas fa-share-alt share-icon"></i>
+                <span class="share-text">Share</span>
+            </div>
+            
+            <div class="menu-content" id="menuContent">
+                <a href="#" id="homeBtn">Home</a>
+                <a href="#" id="aboutBtn">About</a>
+                <a href="#" id="privacyBtn">Privacy Policy</a>
+            </div>
+            
+            <canvas id="gameCanvas"></canvas>
+            <div class="game-over-screen" id="gameOverScreen">
+                <h2>Game Over</h2>
+                <p>Score: <span id="finalScore">0</span></p>
+                <p>Max Score: <span id="maxScore">0</span></p>
+                <button id="restartButton">Replay</button>
+            </div>
+        </div>
+
+        <div class="game-instructions">
+            Play SkyParrot Online for Free!<br>
+            Click on the screen or press Spacebar to start.<br>
+            Challenge yourself & reach the highest score!
+        </div>
+        
+        <div class="extra-space"></div> <!-- Extra space to enable scrolling -->
+    </div>
+    
+    <div class="modal" id="aboutModal">
+        <div class="modal-content">
+            <h1>ABOUT SKYPARROT</h1>
+            
+            <p>Welcome to SkyParrot, the ultimate flying adventure!</p>
+            
+            <p>Dodge obstacles, set high scores, and master the skies with our fearless red parrot.</p>
+            
+            <p>Check out our blog for updates and news. We love hearing your feedback!</p>
+            
+            <div class="contact">
+                <p>For all inquiries:</p>
+                <p><a href="mailto:chiranjitc.official@gmail.com">chiranjitc.official@gmail.com</a></p>
+            </div>
+            
+            <button id="aboutCloseBtn" class="modal-close-btn">BACK TO GAME</button>
+            
+            <div class="copyright">
+                HTML5 Game © Chiranjit C
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="privacyModal">
+        <div class="modal-content">
+            <h1>PRIVACY POLICY FOR SKYPARROT</h1>
+            <div class="last-updated">Last Updated: <span id="currentDate"></span></div>
+            
+            <h2>1. DATA WE COLLECT</h2>
+            <ul>
+                <li><strong>Gameplay Data:</strong> Your scores, achievements and progress (stored locally on your device).</li>
+                <li><strong>Ad Data:</strong> Google AdMob collects device ID, IP address, and cookies for:
+                    <ul>
+                        <li>Showing personalized ads (based on interests)</li>
+                        <li>Analytics and fraud prevention</li>
+                        <li>Measuring ad performance</li>
+                    </ul>
+                </li>
+                <li><strong>No Personal Info:</strong> We never collect your name, email or phone number.</li>
+            </ul>
+            
+            <h2>2. HOW WE USE DATA</h2>
+            <ul>
+                <li>To save your game progress and high scores.</li>
+                <li>To show ads and improve the game.</li>
+                <li>To fix bugs and crashes.</li>
+            </ul>
+            
+            <h2>3. DATA DELETION</h2>
+            <ul>
+                <li><strong>Automatic:</strong> Clear app data via device settings or uninstall SkyParrot.</li>
+                <li><strong>Manual Request:</strong> Email us at <a href="mailto:chiranjitc.official@gmail.com">chiranjitc.official@gmail.com</a> for full deletion.</li>
+            </ul>
+            
+            <h2>4. THIRD-PARTY SERVICES</h2>
+            <ul>
+                <li><strong>Google AdMob:</strong> <a href="https://policies.google.com/privacy" target="_blank">View their policy</a></li>
+                <li><strong>Google Play Games:</strong> Only if you enable cloud saves/leaderboards.</li>
+            </ul>
+            
+            <h2>5. YOUR RIGHTS</h2>
+            <ul>
+                <li><strong>EU Users (GDPR):</strong> You may request data access, correction, or deletion.</li>
+                <li><strong>California Users (CCPA):</strong> You may opt-out of data sharing.</li>
+                <li><strong>All Users:</strong> Disable ad personalization in device settings.</li>
+            </ul>
+            
+            <h2>6. CHILDREN'S PRIVACY</h2>
+            <p>SkyParrot does not knowingly collect data from children under 13.</p>
+            
+            <h2>7. POLICY UPDATES</h2>
+            <p>We may update this policy. Continued play means you accept the changes.</p>
+            
+            <div class="contact-info">
+                <h2>8. CONTACT US</h2>
+                <p>For any questions or concerns regarding this Privacy Policy, please contact:<br>
+                <a href="mailto:chiranjitc.official@gmail.com">chiranjitc.official@gmail.com</a></p>
+            </div>
+            
+            <button id="privacyCloseBtn" class="modal-close-btn">BACK TO SKYPARROT</button>
+        </div>
+    </div>
+
+    <script>
+        // Game setup
+        const gameContainer = document.getElementById("gameContainer");
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const finalScoreDisplay = document.getElementById("finalScore");
+        const maxScoreDisplay = document.getElementById("maxScore");
+        const restartButton = document.getElementById("restartButton");
+        
+        // Menu elements
+        const menuBtn = document.getElementById("menuBtn");
+        const menuContent = document.getElementById("menuContent");
+        const homeBtn = document.getElementById("homeBtn");
+        const aboutBtn = document.getElementById("aboutBtn");
+        const privacyBtn = document.getElementById("privacyBtn");
+        
+        // Share button
+        const shareBtn = document.getElementById("shareBtn");
+        
+        // Modal elements
+        const aboutModal = document.getElementById("aboutModal");
+        const aboutCloseBtn = document.getElementById("aboutCloseBtn");
+        const privacyModal = document.getElementById("privacyModal");
+        const privacyCloseBtn = document.getElementById("privacyCloseBtn");
+        
+        let maxScore = localStorage.getItem("maxScore") || 0;
+        let spacePressCount = 0; // Track total space presses
+
+        // Game elements
+        const clouds = [];
+        const cloudColors = ['#f5f5f5', '#e8e8e8', '#ffffff'];
+        const pipes = [];
+        
+        // Initial game settings
+        const INITIAL_PIPE_SPEED = 1.2;
+        const INITIAL_SPAWN_RATE = 160;
+        const INITIAL_PIPE_GAP = window.innerWidth <= 500 ? 180 : 200; // Larger gap on mobile
+        
+        // Current game settings
+        let pipeWidth = 50;
+        let pipeGap = INITIAL_PIPE_GAP;
+        let spawnRate = INITIAL_SPAWN_RATE;
+        let frame = 0;
+        let score = 0;
+        let gameOver = false;
+        let gameStarted = false;
+        let pipeSpeed = INITIAL_PIPE_SPEED;
+        let gameStartTime = 0;
+        let canScorePipes = false;
+        let minPipeDistance = 250;
+        let minVerticalDistance = 100;
+        let minMargin = 60;
+
+        // Parrot object
+        const parrot = { 
+            x: 0,
+            y: 0,
+            width: 30,
+            height: 25,
+            gravity: 0.08, 
+            lift: -6, 
+            velocity: 0,
+            rotation: 0,
+            scoredPipes: new Set()
+        };
+
+        // Initialize clouds
+        function initClouds() {
+            clouds.length = 0;
+            for (let i = 0; i < 5; i++) {
+                clouds.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height * 0.6,
+                    width: 60 + Math.random() * 40,
+                    height: 20 + Math.random() * 20,
+                    speed: 0.2 + Math.random() * 0.3,
+                    color: cloudColors[Math.floor(Math.random() * cloudColors.length)]
+                });
+            }
+        }
+
+        // Handle canvas resizing
+        function resizeCanvas() {
+            const containerWidth = gameContainer.clientWidth;
+            const containerHeight = gameContainer.clientHeight;
+            
+            canvas.width = containerWidth;
+            canvas.height = containerHeight;
+            
+            pipeWidth = Math.max(30, containerWidth * 0.1);
+            minPipeDistance = containerWidth * 0.6;
+            minVerticalDistance = containerHeight * 0.15;
+            minMargin = containerHeight * 0.1;
+            pipeGap = window.innerWidth <= 500 ? 
+                Math.max(160, containerHeight * 0.35) : // Larger gap on mobile
+                Math.max(160, containerHeight * 0.3); // Original gap on desktop
+            
+            parrot.x = canvas.width / 2;
+            parrot.y = canvas.height / 2 - 70;
+            
+            initClouds();
+            
+            if (!gameStarted) {
+                draw();
+            }
+        }
+
+        // Menu functions
+        function toggleMenu() {
+            if (menuContent.style.display === "flex") {
+                menuContent.style.display = "none";
+            } else {
+                menuContent.style.display = "flex";
+            }
+        }
+        
+        function closeMenu() {
+            menuContent.style.display = "none";
+        }
+
+        // Share function
+        function shareGame() {
+            const gameUrl = window.location.href;
+            const shareData = {
+                title: 'SkyParrot Game',
+                text: 'Check out this awesome SkyParrot game!',
+                url: gameUrl
+            };
+            
+            try {
+                if (navigator.share) {
+                    navigator.share(shareData)
+                        .then(() => console.log('Shared successfully'))
+                        .catch(err => console.log('Error sharing:', err));
+                } else {
+                    const tempInput = document.createElement('input');
+                    document.body.appendChild(tempInput);
+                    tempInput.value = gameUrl;
+                    tempInput.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+                    alert('Game link copied to clipboard!');
+                }
+            } catch (err) {
+                console.error('Error sharing:', err);
+                const tempInput = document.createElement('input');
+                document.body.appendChild(tempInput);
+                tempInput.value = gameUrl;
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                alert('Game link copied to clipboard!');
+            }
+        }
+
+        function startGame() {
+            if (!gameStarted) {
+                gameStarted = true;
+                gameOver = false;
+                gameStartTime = Date.now();
+                gameOverScreen.style.display = "none";
+                score = 0;
+                pipes.length = 0;
+                parrot.scoredPipes.clear();
+                parrot.y = canvas.height / 2 - 70;
+                parrot.velocity = 0;
+                
+                setTimeout(() => {
+                    canScorePipes = true;
+                }, 3000);
+                
+                gameLoop();
+            }
+            parrot.velocity = parrot.lift;
+        }
+
+        function handleJump() {
+            if (gameStarted && !gameOver) {
+                parrot.velocity = parrot.lift;
+            }
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Keyboard controls - keep the original 2-press spacebar behavior
+            document.addEventListener("keydown", (e) => {
+                if (e.code === "Space") {
+                    e.preventDefault();
+                    
+                    // Increment space press count
+                    spacePressCount++;
+                    
+                    // Check if we've reached exactly 2 presses when game is over
+                    if (gameOver && spacePressCount === 2) {
+                        restartGame();
+                        startGame();
+                        spacePressCount = 0; // Reset counter
+                    } 
+                    // Normal jump/start behavior when not game over
+                    else if (!gameOver) {
+                        if (!gameStarted) {
+                            startGame();
+                        } else {
+                            handleJump();
+                        }
+                    }
+                }
+            });
+
+            // Mouse controls - keep original click behavior
+            canvas.addEventListener("click", (e) => {
+                if (!gameStarted && !gameOver) {
+                    startGame();
+                } else if (gameStarted && !gameOver) {
+                    handleJump();
+                }
+            });
+
+            // MODIFIED: Touch controls for mobile - prevent accidental restarts
+            canvas.addEventListener("touchstart", (e) => {
+                e.preventDefault();
+                // Only handle touches if game is not over
+                if (!gameOver) {
+                    if (!gameStarted) {
+                        startGame();
+                    } else {
+                        handleJump();
+                    }
+                }
+            });
+
+            restartButton.addEventListener("click", () => {
+                restartGame();
+                startGame();
+            });
+
+            // Menu events
+            menuBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                toggleMenu();
+            });
+            
+            // Share button event
+            shareBtn.addEventListener("click", shareGame);
+            
+            // Close menu when clicking elsewhere
+            document.addEventListener("click", (e) => {
+                if (menuContent.style.display === "flex" && 
+                    !menuContent.contains(e.target) && 
+                    !menuBtn.contains(e.target)) {
+                    closeMenu();
+                }
+            });
+            
+            // Menu item clicks
+            homeBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                closeMenu();
+            });
+            
+            aboutBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                aboutModal.style.display = "block";
+                closeMenu();
+            });
+            
+            privacyBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                privacyModal.style.display = "block";
+                closeMenu();
+            });
+
+            // About modal close button
+            aboutCloseBtn.addEventListener('click', () => {
+                aboutModal.style.display = 'none';
+            });
+            
+            // Privacy modal close button
+            privacyCloseBtn.addEventListener('click', () => {
+                privacyModal.style.display = 'none';
+            });
+
+            // Handle window resize
+            window.addEventListener("resize", () => {
+                resizeCanvas();
+            });
+            
+            // Handle modal touch events to prevent game interaction
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                });
+                modal.addEventListener('touchmove', (e) => {
+                    e.stopPropagation();
+                });
+            });
+        }
+
+        function createPipe() {
+            const maxHeight = canvas.height - pipeGap - minMargin;
+            let height = Math.floor(Math.random() * (maxHeight - minMargin)) + minMargin;
+            
+            if (pipes.length > 0) {
+                const lastPipe = pipes[pipes.length - 1];
+                if (Math.abs(height - lastPipe.top) < minVerticalDistance) {
+                    height = height > lastPipe.top ? 
+                        Math.min(lastPipe.top + minVerticalDistance, maxHeight) :
+                        Math.max(lastPipe.top - minVerticalDistance, minMargin);
+                }
+            }
+            
+            pipes.push({ 
+                x: canvas.width, 
+                top: height, 
+                bottom: height + pipeGap,
+                id: Date.now() + Math.random()
+            });
+        }
+
+        function updateClouds() {
+            for (let i = 0; i < clouds.length; i++) {
+                clouds[i].x -= clouds[i].speed;
+                if (clouds[i].x + clouds[i].width < 0) {
+                    clouds[i].x = canvas.width;
+                    clouds[i].y = Math.random() * canvas.height * 0.6;
+                }
+            }
+        }
+
+        function drawClouds() {
+            clouds.forEach(cloud => {
+                ctx.fillStyle = cloud.color;
+                ctx.beginPath();
+                ctx.arc(cloud.x + cloud.width * 0.3, cloud.y + cloud.height * 0.5, cloud.height * 0.6, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.width * 0.6, cloud.y + cloud.height * 0.3, cloud.height * 0.7, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.width * 0.8, cloud.y + cloud.height * 0.5, cloud.height * 0.5, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.width * 0.5, cloud.y + cloud.height * 0.7, cloud.height * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawParrot() {
+            ctx.save();
+            ctx.translate(parrot.x, parrot.y);
+            ctx.rotate(parrot.rotation);
+            
+            ctx.fillStyle = "#FF5252";
+            ctx.beginPath();
+            ctx.ellipse(0, 0, parrot.width/2, parrot.height/2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(parrot.width/2 - 5, -parrot.height/2, parrot.width/3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "#FFC107";
+            ctx.beginPath();
+            ctx.moveTo(parrot.width/2 + 5, -parrot.height/2);
+            ctx.lineTo(parrot.width/2 + 15, -parrot.height/2);
+            ctx.lineTo(parrot.width/2 + 10, -parrot.height/2 + 5);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = "#000";
+            ctx.beginPath();
+            ctx.arc(parrot.width/2, -parrot.height/2 - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "#D32F2F";
+            ctx.beginPath();
+            ctx.moveTo(-5, 0);
+            ctx.lineTo(-15, -10);
+            ctx.lineTo(-5, -5);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(-parrot.width/2, 0);
+            ctx.lineTo(-parrot.width/2 - 10, -5);
+            ctx.lineTo(-parrot.width/2 - 10, 5);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        function drawPipe(x, height, isTop) {
+            ctx.fillStyle = isTop ? "#4CAF50" : "#388E3C";
+            ctx.fillRect(x, isTop ? 0 : height, pipeWidth, isTop ? height : canvas.height - height);
+            
+            ctx.fillStyle = isTop ? "#2E7D32" : "#1B5E20";
+            ctx.fillRect(x, isTop ? height - 10 : height, pipeWidth, 10);
+        }
+
+        function update() {
+            if (!gameStarted || gameOver) return;
+            
+            parrot.velocity += parrot.gravity;
+            parrot.velocity *= 0.95;
+            parrot.y += parrot.velocity;
+            parrot.rotation = Math.max(-Math.PI/4, Math.min(Math.PI/4, parrot.velocity * 0.1));
+            
+            updateClouds();
+            
+            pipes.forEach(pipe => pipe.x -= pipeSpeed);
+            
+            if (Date.now() - gameStartTime > 3000) {
+                if (frame % spawnRate === 0 && 
+                    (pipes.length === 0 || canvas.width - pipes[pipes.length-1].x > minPipeDistance)) {
+                    createPipe();
+                }
+            }
+            
+            if (canScorePipes) {
+                pipes.forEach(pipe => {
+                    if (!parrot.scoredPipes.has(pipe.id) && parrot.x > pipe.x + pipeWidth) {
+                        score++;
+                        parrot.scoredPipes.add(pipe.id);
+                        
+                        if (score % 5 === 0) {
+                            pipeSpeed += 0.15;
+                            spawnRate = Math.max(130, spawnRate - 5);
+                            pipeGap = Math.max(160, pipeGap - 5);
+                        }
+                    }
+                });
+            }
+            
+            if (pipes.length > 0 && pipes[0].x + pipeWidth < 0) {
+                pipes.shift();
+            }
+            
+            const parrotRadius = parrot.width/2;
+            const hitPipe = pipes.some(pipe => 
+                parrot.x + parrotRadius > pipe.x &&
+                parrot.x - parrotRadius < pipe.x + pipeWidth &&
+                (parrot.y - parrotRadius < pipe.top || parrot.y + parrotRadius > pipe.bottom)
+            );
+            
+            if (hitPipe || parrot.y + parrotRadius >= canvas.height || parrot.y - parrotRadius <= 0) {
+                endGame();
+            }
+            
+            frame++;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "skyblue";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            drawClouds();
+            
+            pipes.forEach(pipe => {
+                drawPipe(pipe.x, pipe.top, true);
+                drawPipe(pipe.x, pipe.bottom, false);
+            });
+            
+            drawParrot();
+            
+            ctx.fillStyle = "black";
+            ctx.font = `20px 'Press Start 2P', sans-serif`;
+            ctx.textAlign = "center";
+            ctx.fillText(`Score: ${score}`, canvas.width / 2, 30);
+            
+            if (!gameStarted) {
+                ctx.fillText("TAP TO PLAY", canvas.width / 2, canvas.height / 2);
+                ctx.font = "20px 'Press Start 2P', sans-serif";
+            } else if (Date.now() - gameStartTime <= 3000) {
+                const timeLeft = Math.ceil((3000 - (Date.now() - gameStartTime)) / 1000);
+                ctx.fillStyle = "black";
+                ctx.fillText(`Pipes In: ${timeLeft}`, canvas.width / 2, canvas.height / 2 + 40);
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            if (!gameOver) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function endGame() {
+            gameOver = true;
+            finalScoreDisplay.textContent = score;
+            if (score > maxScore) {
+                maxScore = score;
+                localStorage.setItem("maxScore", maxScore);
+            }
+            maxScoreDisplay.textContent = maxScore;
+            gameOverScreen.style.display = "block";
+            
+            spacePressCount = 0; // Reset counter when game ends
+        }
+
+        function restartGame() {
+            gameOver = false;
+            gameStarted = false;
+            canScorePipes = false;
+            score = 0;
+            parrot.y = canvas.height / 2 - 70;
+            parrot.velocity = 0;
+            pipes.length = 0;
+            frame = 0;
+            parrot.scoredPipes.clear();
+            
+            pipeSpeed = INITIAL_PIPE_SPEED;
+            spawnRate = INITIAL_SPAWN_RATE;
+            pipeGap = INITIAL_PIPE_GAP;
+            
+            gameOverScreen.style.display = "none";
+            draw();
+        }
+        
+        // Initialize game
+        setupEventListeners();
+        resizeCanvas();
+        draw();
+    </script>
+</body>
+</html>
